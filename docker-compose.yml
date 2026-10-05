@@ -1,0 +1,48 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: mesa_pronta
+      POSTGRES_USER: mesa_pronta
+      POSTGRES_PASSWORD: mesa_pronta
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    restart: unless-stopped
+
+  backend:
+    build: ./backend
+    depends_on:
+      - db
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: mesa_pronta
+      POSTGRES_USER: mesa_pronta
+      POSTGRES_PASSWORD: mesa_pronta
+    command: >
+      sh -c "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"
+    ports:
+      - "8000:8000"
+    restart: unless-stopped
+
+  mqtt_consumer:
+    build: ./backend
+    depends_on:
+      - db
+      - backend
+    environment:
+      MQTT_HOST: broker.hivemq.com  
+      MQTT_PORT: "1883"
+      MQTT_PREFIX: mesapronta-js9k
+      POSTGRES_HOST: db
+      POSTGRES_PORT: "5432"
+      POSTGRES_DB: mesa_pronta
+      POSTGRES_USER: mesa_pronta
+      POSTGRES_PASSWORD: mesa_pronta
+    command: python manage.py run_mqtt_consumer
+    restart: unless-stopped
+
+volumes:
+  pgdata:
