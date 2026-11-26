@@ -13,6 +13,7 @@ import authRouter from './routes/auth.routes.js';
 import userRouter from './routes/usuario.routes.js';
 import adminRouter from './routes/admin.routes.js';
 import { cardapioRouter, produtoRouter, mesaRouter } from './routes/cardapio.routes.js';
+import reservaRouter from './routes/reserva.routes.js';
 import { swaggerSpec } from './config/swagger.js';
 import { corsConfig } from './config/cors.js';
 import { helmetConfig } from './config/helmet.js';
@@ -69,6 +70,7 @@ app.use('/admin', adminRouter);
 app.use('/cardapio', cardapioRouter);
 app.use('/produtos', produtoRouter);
 app.use('/mesas', mesaRouter);
+app.use('/reservas', reservaRouter);
 
 app.use(rotaNaoEncontrada);
 app.use(tratadorDeErros); // sempre por último

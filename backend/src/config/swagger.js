@@ -11,7 +11,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import swaggerJsdoc from 'swagger-jsdoc';
 import { ROLES } from '../constants/roles.js';
-import { CATEGORIAS_PRODUTO } from '../constants/restaurante.js';
+import { CATEGORIAS_PRODUTO, STATUS_RESERVA } from '../constants/restaurante.js';
 
 const raiz = path.dirname(fileURLToPath(import.meta.url));
 
@@ -49,6 +49,7 @@ const definition = {
     { name: 'Admin', description: 'Administração de usuários: cria funcionários, lista, desativa e reativa (somente `admin`)' },
     { name: 'Cardápio', description: 'Cardápio público e gestão dos produtos' },
     { name: 'Mesas', description: 'Mesas do salão' },
+    { name: 'Reservas', description: 'Reservas de mesa (sexta a domingo), check-in e conclusão' },
   ],
   components: {
     securitySchemes: {
@@ -139,6 +140,44 @@ const definition = {
           numero: { type: 'integer', example: 7 },
           capacidade: { type: 'integer', example: 4 },
           ativa: { type: 'boolean' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      MesaResumo: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          numero: { type: 'integer', example: 7 },
+          capacidade: { type: 'integer', example: 4 },
+        },
+      },
+      PessoaResumo: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          nome: { type: 'string', example: 'Carlos' },
+          sobrenome: { type: 'string', example: 'Pereira' },
+        },
+      },
+      Reserva: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          data: { type: 'string', format: 'date', example: '2026-12-04' },
+          horario: { type: 'string', example: '20:30' },
+          pessoas: { type: 'integer', example: 4 },
+          status: { type: 'string', enum: STATUS_RESERVA },
+          observacao: nulo(texto()),
+          clienteId: { type: 'string', format: 'uuid' },
+          mesaId: { type: 'string', format: 'uuid' },
+          garcomId: nulo({ type: 'string', format: 'uuid', description: 'Definido no check-in' }),
+          mesa: { $ref: '#/components/schemas/MesaResumo' },
+          cliente: {
+            allOf: [{ $ref: '#/components/schemas/PessoaResumo' }],
+            description: 'Inclui também email e telefoneCelular',
+          },
+          garcom: nulo({ allOf: [{ $ref: '#/components/schemas/PessoaResumo' }] }),
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
         },
