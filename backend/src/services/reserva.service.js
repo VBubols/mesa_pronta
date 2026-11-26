@@ -1,5 +1,8 @@
 import { Op } from 'sequelize';
-import { Mesa, Reserva, Usuario } from '../models/index.js';
+import sequelize from '../config/database.js';
+import {
+    ItemPedido, Mesa, Pedido, Reserva, Usuario,
+} from '../models/index.js';
 import { AppError } from '../utils/AppError.js';
 import { ehFuturo } from '../utils/regras.js';
 import { DIAS_RESERVA, HORARIOS_RESERVA, NOMES_DIAS } from '../constants/restaurante.js';
@@ -11,6 +14,12 @@ const detalhes = () => [
     { model: Mesa, as: 'mesa', attributes: ['id', 'numero', 'capacidade'] },
     { model: Usuario, as: 'cliente', attributes: ['id', 'nome', 'sobrenome', 'email', 'telefoneCelular'] },
     { model: Usuario, as: 'garcom', attributes: ['id', 'nome', 'sobrenome'] },
+    {
+        model: Pedido,
+        as: 'pedidos',
+        attributes: ['id', 'origem', 'status', 'subtotalCentavos', 'taxaServicoCentavos', 'totalCentavos', 'formaPagamento', 'pagoEm', 'pago', 'createdAt'],
+        include: [{ model: ItemPedido, as: 'itens', attributes: ['id', 'nomeProduto', 'quantidade', 'precoUnitarioCentavos'] }],
+    },
 ];
 
 async function buscar(id, opcoes = {}) {
@@ -127,7 +136,14 @@ export async function cancelar(id, usuario) {
         throw new AppError(409, 'O horário da reserva já passou. Fale com o restaurante');
     }
 
-    await reserva.update({ status: 'cancelada' });
+    await sequelize.transaction(async (transaction) => {
+        await reserva.update({ status: 'cancelada' }, { transaction });
+        // A compra antecipada vai junto (estorno simulado): sai da cozinha e do financeiro.
+        await Pedido.update(
+            { status: 'cancelado' },
+            { where: { reservaId: id, status: 'agendado' }, transaction },
+        );
+    });
     return buscar(id);
 }
 
@@ -144,7 +160,14 @@ export async function checkIn(id, usuario, { garcomId }) {
     const garcom = await Usuario.findOne({ where: { id: idGarcom, role: 'funcionario', ativo: true } });
     if (!garcom) throw new AppError(400, 'O garçom precisa ser um funcionário ativo');
 
-    await reserva.update({ status: 'em_atendimento', garcomId: garcom.id });
+    await sequelize.transaction(async (transaction) => {
+        await reserva.update({ status: 'em_atendimento', garcomId: garcom.id }, { transaction });
+        // A compra antecipada sai de "agendado" para a cozinha, com o garçom do atendimento.
+        await Pedido.update(
+            { status: 'aberto', garcomId: garcom.id },
+            { where: { reservaId: id, status: 'agendado' }, transaction },
+        );
+    });
     return buscar(id);
 }
 
@@ -153,6 +176,11 @@ export async function concluir(id) {
     if (reserva.status !== 'em_atendimento') {
         throw new AppError(409, 'Só reservas em atendimento podem ser concluídas');
     }
+    const pendentes = await Pedido.count({
+        where: { reservaId: id, status: { [Op.ne]: 'cancelado' }, pagoEm: null },
+    });
+    if (pendentes) throw new AppError(409, `A mesa tem ${pendentes} pedido(s) sem pagamento`);
+
     await reserva.update({ status: 'concluida' });
     return buscar(id);
 }

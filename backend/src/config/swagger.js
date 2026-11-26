@@ -11,7 +11,9 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import swaggerJsdoc from 'swagger-jsdoc';
 import { ROLES } from '../constants/roles.js';
-import { CATEGORIAS_PRODUTO, STATUS_RESERVA } from '../constants/restaurante.js';
+import {
+  CATEGORIAS_PRODUTO, FORMAS_PAGAMENTO, ORIGENS_PEDIDO, STATUS_PEDIDO, STATUS_RESERVA,
+} from '../constants/restaurante.js';
 
 const raiz = path.dirname(fileURLToPath(import.meta.url));
 
@@ -49,7 +51,8 @@ const definition = {
     { name: 'Admin', description: 'Administração de usuários: cria funcionários, lista, desativa e reativa (somente `admin`)' },
     { name: 'Cardápio', description: 'Cardápio público e gestão dos produtos' },
     { name: 'Mesas', description: 'Mesas do salão' },
-    { name: 'Reservas', description: 'Reservas de mesa (sexta a domingo), check-in e conclusão' },
+    { name: 'Reservas', description: 'Reservas de mesa (sexta a domingo), compra antecipada, check-in e conclusão' },
+    { name: 'Pedidos', description: 'Pedidos na mesa: lançamento, preparo, cancelamento e pagamento' },
   ],
   components: {
     securitySchemes: {
@@ -178,6 +181,58 @@ const definition = {
             description: 'Inclui também email e telefoneCelular',
           },
           garcom: nulo({ allOf: [{ $ref: '#/components/schemas/PessoaResumo' }] }),
+          pedidos: { type: 'array', items: { $ref: '#/components/schemas/Pedido' }, description: 'Pedidos ligados à reserva, inclusive a compra antecipada' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      ItensEntrada: {
+        type: 'array',
+        minItems: 1,
+        maxItems: 30,
+        description: 'Só produto e quantidade: nome e preço vêm do cardápio. Itens repetidos são somados.',
+        items: {
+          type: 'object',
+          required: ['produtoId', 'quantidade'],
+          properties: {
+            produtoId: { type: 'string', format: 'uuid' },
+            quantidade: { type: 'integer', minimum: 1, maximum: 50, example: 2 },
+          },
+        },
+      },
+      Pedido: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          origem: { type: 'string', enum: ORIGENS_PEDIDO },
+          status: { type: 'string', enum: STATUS_PEDIDO },
+          subtotalCentavos: { type: 'integer', example: 11780 },
+          taxaServicoCentavos: { type: 'integer', example: 1178, description: '10% do garçom' },
+          totalCentavos: { type: 'integer', example: 12958 },
+          formaPagamento: nulo({ type: 'string', enum: FORMAS_PAGAMENTO }),
+          pagoEm: nulo({ type: 'string', format: 'date-time' }),
+          pago: { type: 'boolean' },
+          observacao: nulo(texto()),
+          mesaId: { type: 'string', format: 'uuid' },
+          reservaId: nulo({ type: 'string', format: 'uuid' }),
+          clienteId: nulo({ type: 'string', format: 'uuid' }),
+          garcomId: nulo({ type: 'string', format: 'uuid' }),
+          itens: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                id: { type: 'string', format: 'uuid' },
+                produtoId: { type: 'string', format: 'uuid' },
+                nomeProduto: { type: 'string', example: 'Risoto de cogumelos' },
+                quantidade: { type: 'integer', example: 2 },
+                precoUnitarioCentavos: { type: 'integer', example: 5890 },
+              },
+            },
+          },
+          mesa: { type: 'object', properties: { id: { type: 'string', format: 'uuid' }, numero: { type: 'integer' } } },
+          garcom: nulo({ allOf: [{ $ref: '#/components/schemas/PessoaResumo' }] }),
+          cliente: nulo({ allOf: [{ $ref: '#/components/schemas/PessoaResumo' }] }),
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
         },

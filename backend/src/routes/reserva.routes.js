@@ -6,7 +6,9 @@ import { autenticar } from '../middlewares/auth.middleware.js';
 import { autorizar } from '../middlewares/authorize.middleware.js';
 import { validar } from '../middlewares/validator.middleware.js';
 import { validarQuery } from '../middlewares/validator-query.middleware.js';
+import { criarAntecipado } from '../controllers/pedido.controller.js';
 import { idParamSchema } from '../schemas/common.schema.js';
+import { compraAntecipadaSchema } from '../schemas/pedido.schema.js';
 import {
     criarReservaSchema, disponibilidadeQuerySchema, listarReservasQuerySchema, checkInSchema,
 } from '../schemas/reserva.schema.js';
@@ -259,5 +261,45 @@ reservaRouter.patch('/:id/check-in', gestao, validar(idParamSchema, 'params'), v
  *       409: { $ref: '#/components/responses/Conflito' }
  */
 reservaRouter.patch('/:id/concluir', gestao, validar(idParamSchema, 'params'), concluir);
+
+/**
+ * @openapi
+ * /reservas/{id}/pedido:
+ *   post:
+ *     tags: [Reservas]
+ *     summary: Compra antecipada
+ *     description: >
+ *       Somente o `cliente` dono da reserva, enquanto ela está confirmada e no futuro. O cliente
+ *       escolhe do cardápio e paga na hora (pagamento simulado), já com os 10% do garçom. O
+ *       pedido fica `agendado` e vai para a cozinha no check-in, quando ganha o garçom do
+ *       atendimento. Uma compra antecipada por reserva.
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - { in: path, name: id, required: true, schema: { type: string, format: uuid } }
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required: [itens, formaPagamento]
+ *             properties:
+ *               itens: { $ref: '#/components/schemas/ItensEntrada' }
+ *               formaPagamento: { type: string, enum: [pix, credito, debito, dinheiro] }
+ *               observacao: { type: string, maxLength: 255 }
+ *     responses:
+ *       201:
+ *         description: Compra registrada e paga
+ *         content:
+ *           application/json:
+ *             schema: { $ref: '#/components/schemas/Pedido' }
+ *       400: { $ref: '#/components/responses/DadosInvalidos' }
+ *       401: { $ref: '#/components/responses/NaoAutenticado' }
+ *       403: { $ref: '#/components/responses/SemPermissao' }
+ *       404: { $ref: '#/components/responses/NaoEncontrado' }
+ *       409: { $ref: '#/components/responses/Conflito' }
+ */
+reservaRouter.post('/:id/pedido', autorizar('cliente'), validar(idParamSchema, 'params'), validar(compraAntecipadaSchema), criarAntecipado);
 
 export default reservaRouter;
