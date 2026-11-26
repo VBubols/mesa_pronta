@@ -3,9 +3,9 @@ import { AuthContext } from './contextos.js';
 import * as authApi from '../api/auth.js';
 import { apagarToken, definirAoExpirarSessao, lerToken, salvarToken } from '../api/client.js';
 
-const CHAVE_USUARIO = 'portal-vagas:usuario';
+const CHAVE_USUARIO = 'mesa-pronta:usuario';
 
-// Guarda só o que a interface usa. Nunca CPF, telefone ou dados sensíveis.
+// Guarda só o que a interface usa: nome e perfil. Telefone e demais dados ficam no servidor.
 function resumirUsuario(usuario) {
   const { id, nome, sobrenome, email, role } = usuario;
   return { id, nome, sobrenome, email, role };
@@ -72,6 +72,8 @@ export function AuthProvider({ children }) {
       usuario,
       logado: Boolean(usuario),
       ehAdmin: usuario?.role === 'admin',
+      // Funcionário e admin usam a área de gestão; cliente usa o site.
+      ehGestao: usuario?.role === 'admin' || usuario?.role === 'funcionario',
       entrar,
       sair,
     }),
