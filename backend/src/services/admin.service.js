@@ -1,15 +1,15 @@
+import bcrypt from 'bcryptjs';
 import { Op } from 'sequelize';
 import Usuario from '../models/usuario.model.js';
 import { AppError } from '../utils/AppError.js';
 import { serializarUsuario } from '../utils/serializarUsuario.js';
+import { semUndefined } from '../utils/semUndefined.js';
 
-export async function listarUsuarios({ pagina = 1, limite = 20, busca } = {}) {
-    const p = Math.max(parseInt(pagina, 10) || 1, 1);
-    const l = Math.min(Math.max(parseInt(limite, 10) || 20, 1), 100);
-
+export async function listarUsuarios({ pagina, limite, busca, role }) {
     const where = {};
-    if (typeof busca === 'string' && busca.trim()) {
-        const termo = `%${busca.trim().replace(/[%_\\]/g, '\\$&')}%`;
+    if (role) where.role = role;
+    if (busca) {
+        const termo = `%${busca.replace(/[%_\\]/g, '\\$&')}%`;
         where[Op.or] = [
             { nome: { [Op.iLike]: termo } },
             { sobrenome: { [Op.iLike]: termo } },
@@ -20,11 +20,19 @@ export async function listarUsuarios({ pagina = 1, limite = 20, busca } = {}) {
     const { rows, count } = await Usuario.findAndCountAll({
         where,
         order: [['createdAt', 'DESC']],
-        limit: l,
-        offset: (p - 1) * l,
+        limit: limite,
+        offset: (pagina - 1) * limite,
     });
 
-    return { dados: rows.map((u) => serializarUsuario(u)), total: count, pagina: p, limite: l };
+    return { dados: rows.map((u) => serializarUsuario(u)), total: count, pagina, limite };
+}
+
+export async function criarUsuario({ senha, ...dados }) {
+    if (await Usuario.findOne({ where: { email: dados.email } })) {
+        throw new AppError(409, 'E-mail já cadastrado');
+    }
+    const usuario = await Usuario.create({ ...semUndefined(dados), senha: await bcrypt.hash(senha, 10) });
+    return serializarUsuario(usuario);
 }
 
 export async function alterarStatus(id, ativo, solicitanteId) {

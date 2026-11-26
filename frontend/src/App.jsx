@@ -1,42 +1,62 @@
 import { lazy, Suspense } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import { LinearProgress } from '@mui/material';
-import Layout from './components/Layout.jsx';
+import LayoutSite from './components/LayoutSite.jsx';
+import LayoutGestao from './components/LayoutGestao.jsx';
 import RotaProtegida from './components/RotaProtegida.jsx';
-import RotaAdmin from './components/RotaAdmin.jsx';
+import RotaPorPerfil from './components/RotaPorPerfil.jsx';
+import Cardapio from './pages/Cardapio.jsx';
 import Login from './pages/Login.jsx';
 
-// Cada tela é baixada só quando é aberta: o login carrega rápido, e o código de
-// markdown (detalhe da vaga) e do admin não pesa para quem não usa.
+// Cada tela é baixada só quando é aberta: o cliente não carrega o código da gestão.
 const Cadastro = lazy(() => import('./pages/Cadastro.jsx'));
-const Vagas = lazy(() => import('./pages/Vagas.jsx'));
-const VagaDetalhe = lazy(() => import('./pages/VagaDetalhe.jsx'));
-const Curriculo = lazy(() => import('./pages/Curriculo.jsx'));
-const Admin = lazy(() => import('./pages/Admin.jsx'));
+const Reservar = lazy(() => import('./pages/Reservar.jsx'));
+const MinhasReservas = lazy(() => import('./pages/MinhasReservas.jsx'));
+const Pedidos = lazy(() => import('./pages/gestao/Pedidos.jsx'));
+const Reservas = lazy(() => import('./pages/gestao/Reservas.jsx'));
+const Produtos = lazy(() => import('./pages/gestao/Produtos.jsx'));
+const Mesas = lazy(() => import('./pages/gestao/Mesas.jsx'));
+const Compras = lazy(() => import('./pages/gestao/Compras.jsx'));
+const Financeiro = lazy(() => import('./pages/gestao/Financeiro.jsx'));
+const Usuarios = lazy(() => import('./pages/gestao/Usuarios.jsx'));
 
 export default function App() {
   return (
     <Suspense fallback={<LinearProgress />}>
       <Routes>
-        {/* Públicas */}
         <Route path="/login" element={<Login />} />
         <Route path="/cadastro" element={<Cadastro />} />
 
-        {/* Exigem login */}
-        <Route element={<RotaProtegida />}>
-          <Route element={<Layout />}>
-            <Route path="/vagas" element={<Vagas />} />
-            <Route path="/vagas/:id" element={<VagaDetalhe />} />
-            <Route path="/curriculo" element={<Curriculo />} />
-
-            {/* Exigem login de admin */}
-            <Route element={<RotaAdmin />}>
-              <Route path="/admin" element={<Admin />} />
+        {/* Site do cliente. O cardápio é público; reservar exige conta de cliente. */}
+        <Route element={<LayoutSite />}>
+          <Route index element={<Cardapio />} />
+          <Route element={<RotaProtegida />}>
+            <Route element={<RotaPorPerfil perfis={['cliente']} />}>
+              <Route path="/reservar" element={<Reservar />} />
+              <Route path="/minhas-reservas" element={<MinhasReservas />} />
             </Route>
           </Route>
         </Route>
 
-        <Route path="*" element={<Navigate to="/vagas" replace />} />
+        {/* Gestão: funcionário cuida do salão; admin também administra. */}
+        <Route element={<RotaProtegida />}>
+          <Route element={<RotaPorPerfil perfis={['funcionario', 'admin']} />}>
+            <Route path="/gestao" element={<LayoutGestao />}>
+              <Route index element={<Navigate to="pedidos" replace />} />
+              <Route path="pedidos" element={<Pedidos />} />
+              <Route path="reservas" element={<Reservas />} />
+              <Route element={<RotaPorPerfil perfis={['admin']} />}>
+                <Route path="cardapio" element={<Produtos />} />
+                <Route path="mesas" element={<Mesas />} />
+                <Route path="compras" element={<Compras />} />
+                <Route path="financeiro" element={<Financeiro />} />
+                <Route path="usuarios" element={<Usuarios />} />
+              </Route>
+            </Route>
+          </Route>
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );
