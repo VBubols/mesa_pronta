@@ -1,8 +1,8 @@
 import * as usuarioService from '../services/usuario.service.js';
 
 // No Express 5, erros lançados em handlers async já chegam ao middleware de
-// erros, então não há try/catch aqui. Toda a regra de negócio (e-mail e CPF
-// repetidos, hash da senha, serialização com CPF) fica em usuario.service.js.
+// erros, então não há try/catch aqui. Toda a regra de negócio (e-mail repetido,
+// hash da senha, serialização) fica em usuario.service.js.
 
 export async function perfil(req, res) {
     return res.status(200).json(await usuarioService.obterPerfil(req.usuario.id));

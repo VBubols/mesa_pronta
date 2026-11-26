@@ -12,12 +12,9 @@ export async function cadastrar({ senha, ...dados }) {
     if (await Usuario.findOne({ where: { email: dados.email } })) {
         throw new AppError(409, 'E-mail já cadastrado');
     }
-    if (dados.cpf && (await Usuario.buscarPorCpf(dados.cpf))) {
-        throw new AppError(409, 'CPF já cadastrado');
-    }
 
     const senhaHash = await bcrypt.hash(senha, 10);
-    // role nunca vem do body: o schema descarta campos desconhecidos
+    // role nunca vem do body (o schema descarta campos desconhecidos): sempre cliente
     const usuario = await Usuario.create({ ...semUndefined(dados), senha: senhaHash });
     return serializarUsuario(usuario);
 }

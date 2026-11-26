@@ -12,8 +12,7 @@ async function buscarOuFalhar(id) {
 }
 
 export async function obterPerfil(id) {
-    // único lugar que devolve o CPF completo: o próprio dono vendo o próprio perfil
-    return serializarUsuario(await buscarOuFalhar(id), { cpfCompleto: true });
+    return serializarUsuario(await buscarOuFalhar(id));
 }
 
 export async function atualizarPerfil(id, entrada) {
@@ -27,13 +26,8 @@ export async function atualizarPerfil(id, entrada) {
         if (emUso) throw new AppError(409, 'E-mail já cadastrado');
     }
 
-    if (dados.cpf && dados.cpf !== usuario.cpf) {
-        const dono = await Usuario.buscarPorCpf(dados.cpf);
-        if (dono && dono.id !== usuario.id) throw new AppError(409, 'CPF já cadastrado');
-    }
-
     await usuario.update(dados);
-    return serializarUsuario(usuario, { cpfCompleto: true });
+    return serializarUsuario(usuario);
 }
 
 export async function atualizarSenha(id, { senhaAntiga, novaSenha }) {

@@ -14,9 +14,6 @@ userRouter.use(autenticar);
  *   get:
  *     tags: [Usuário]
  *     summary: Devolve os dados do usuário logado
- *     description: >
- *       Mesmo formato de `Usuario`, mas com o `cpf` completo (só dígitos), já que quem consulta
- *       é o próprio dono. Os campos internos de armazenamento do CPF não são expostos.
  *     security:
  *       - bearerAuth: []
  *     responses:
@@ -24,7 +21,7 @@ userRouter.use(autenticar);
  *         description: Dados do usuário
  *         content:
  *           application/json:
- *             schema: { $ref: '#/components/schemas/PerfilDoUsuario' }
+ *             schema: { $ref: '#/components/schemas/Usuario' }
  *       401:
  *         description: Token ausente, inválido ou expirado (inclui conta desativada)
  *         content:
@@ -39,11 +36,9 @@ userRouter.get('/perfil', perfil);
  *     tags: [Usuário]
  *     summary: Atualiza os dados do perfil do usuário logado
  *     description: >
- *       Atualização parcial: envie só o que quer mudar, mas ao menos um campo. Todos os campos
- *       abaixo são gravados. Os obrigatórios do cadastro não aceitam valor vazio; só o
- *       `telefoneFixo` pode ser apagado (envie `null` ou texto vazio). Telefones aceitam
- *       máscara e `+55` e são guardados só com dígitos. O e-mail e o CPF não podem pertencer a
- *       outra conta.
+ *       Atualização parcial: envie só o que quer mudar, mas ao menos um campo. Os campos não
+ *       aceitam valor vazio. O celular aceita máscara e `+55` e é guardado só com dígitos. O
+ *       e-mail não pode pertencer a outra conta.
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -56,21 +51,13 @@ userRouter.get('/perfil', perfil);
  *               nome: { type: string, minLength: 2, maxLength: 100, example: Maria Clara }
  *               sobrenome: { type: string, minLength: 2, maxLength: 100, example: Silva }
  *               email: { type: string, format: email, example: maria@exemplo.com }
- *               cpf: { type: string, example: '529.982.247-25', description: 'Com ou sem pontuação' }
  *               telefoneCelular: { type: string, example: '(48) 99999-0000', description: 'DDD + 9 dígitos' }
- *               telefoneFixo:
- *                 type: string
- *                 nullable: true
- *                 example: '(48) 3333-4444'
- *                 description: 'DDD + 8 dígitos. Envie null ou texto vazio para apagar'
- *               dataNascimento: { type: string, format: date, example: '1995-05-10', description: 'Idade entre 14 e 120 anos' }
- *               paisOrigem: { type: string, example: BR, description: 'Código ISO 3166-1 alpha-2' }
  *     responses:
  *       200:
  *         description: Dados do usuário já atualizados
  *         content:
  *           application/json:
- *             schema: { $ref: '#/components/schemas/PerfilDoUsuario' }
+ *             schema: { $ref: '#/components/schemas/Usuario' }
  *       400:
  *         description: Dados inválidos (inclui corpo sem nenhum campo para atualizar)
  *         content:
@@ -82,7 +69,7 @@ userRouter.get('/perfil', perfil);
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Erro' }
  *       409:
- *         description: E-mail ou CPF já cadastrado em outra conta (a mensagem diz qual)
+ *         description: E-mail já cadastrado em outra conta
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Erro' }

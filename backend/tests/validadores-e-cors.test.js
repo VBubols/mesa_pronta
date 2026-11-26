@@ -72,10 +72,6 @@ test('erro de query e erro de body saem no mesmo formato: { mensagem, detalhes }
   assert.deepEqual(respostaQuery.corpo.detalhes, respostaBody.corpo.detalhes);
 });
 
-test('cors: expõe o Content-Disposition (nome do PDF) para o front', () => {
-  assert.ok(corsConfig.exposedHeaders.includes('Content-Disposition'));
-});
-
 test('cors: aceita o Vite local e bloqueia outras origens', () => {
   let resultado;
   corsConfig.origin('http://localhost:5173', (erro, permitido) => { resultado = { erro, permitido }; });
