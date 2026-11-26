@@ -11,14 +11,13 @@ const authRouter = express.Router();
  * /auth/cadastro:
  *   post:
  *     tags: [Autenticação]
- *     summary: Cria uma conta de usuário
+ *     summary: Cria uma conta de cliente
  *     description: >
- *       Cria a conta com perfil `usuario` (o perfil nunca vem do corpo da requisição; campos
- *       desconhecidos são ignorados). O CPF é validado pelos dígitos verificadores, aceita
- *       pontos e traço e fica guardado cifrado; na resposta aparece mascarado. Telefones
- *       aceitam máscara e `+55` e são guardados só com dígitos. `telefoneFixo` é o único
- *       campo opcional. Esta rota não devolve token: depois do cadastro, faça login em
- *       `/auth/login`. Limite: 10 requisições por IP a cada 15 minutos.
+ *       Cria a conta sempre com perfil `cliente` (o perfil nunca vem do corpo da requisição;
+ *       campos desconhecidos são ignorados). Funcionários e admins são criados pelo admin.
+ *       O celular aceita máscara e `+55` e é guardado só com dígitos. Esta rota não devolve
+ *       token: depois do cadastro, faça login em `/auth/login`. Limite de cadastros por IP a
+ *       cada 15 minutos (padrão 30, ajustável por `LIMITE_CADASTROS`).
  *     security: []
  *     requestBody:
  *       required: true
@@ -26,30 +25,16 @@ const authRouter = express.Router();
  *         application/json:
  *           schema:
  *             type: object
- *             required: [nome, sobrenome, email, senha, cpf, telefoneCelular, dataNascimento, paisOrigem]
+ *             required: [nome, sobrenome, email, senha, telefoneCelular]
  *             properties:
  *               nome: { type: string, minLength: 2, maxLength: 100, example: Maria }
  *               sobrenome: { type: string, minLength: 2, maxLength: 100, example: Silva }
  *               email: { type: string, format: email, example: maria@exemplo.com }
  *               senha: { type: string, format: password, minLength: 6, maxLength: 72 }
- *               cpf: { type: string, example: '529.982.247-25', description: 'Com ou sem pontuação' }
  *               telefoneCelular:
  *                 type: string
  *                 example: '(48) 99999-0000'
  *                 description: DDD + 9 dígitos, com ou sem máscara e `+55`
- *               telefoneFixo:
- *                 type: string
- *                 example: '(48) 3333-4444'
- *                 description: Opcional. DDD + 8 dígitos (o número começa com 2 a 5)
- *               dataNascimento:
- *                 type: string
- *                 format: date
- *                 example: '1995-05-10'
- *                 description: Idade entre 14 e 120 anos
- *               paisOrigem:
- *                 type: string
- *                 example: BR
- *                 description: Código ISO 3166-1 alpha-2 (aceita minúsculas)
  *     responses:
  *       201:
  *         description: Conta criada
@@ -62,7 +47,7 @@ const authRouter = express.Router();
  *           application/json:
  *             schema: { $ref: '#/components/schemas/ErroDados' }
  *       409:
- *         description: E-mail ou CPF já cadastrado (a mensagem diz qual)
+ *         description: E-mail já cadastrado
  *         content:
  *           application/json:
  *             schema: { $ref: '#/components/schemas/Erro' }

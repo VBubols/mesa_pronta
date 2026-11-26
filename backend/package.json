@@ -1,15 +1,13 @@
 {
-  "name": "portal_vagas",
+  "name": "mesa_pronta",
   "version": "1.0.0",
-  "description": "Sistema de portal de vagas",
+  "description": "API do sistema de gestão do restaurante Mesa Pronta",
   "main": "index.js",
   "type": "module",
   "scripts": {
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
     "seed": "node src/seeds/admin.seed.js",
-    "seed:skills": "node src/seeds/skills.seed.js",
-    "vagas:sincronizar": "node scripts/sincronizar.vagas.js",
     "test": "node --test"
   },
   "keywords": [],
@@ -24,8 +22,6 @@
     "helmet": "^8.1.0",
     "jsonwebtoken": "^9.0.3",
     "nodemon": "^3.1.14",
-    "octokit": "^5.0.5",
-    "pdfkit": "^0.20.2",
     "pg": "^8.20.0",
     "pg-hstore": "^2.3.4",
     "sequelize": "^6.37.8",

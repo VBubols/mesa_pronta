@@ -1,10 +1,6 @@
 import sequelize from '../config/database.js';
 import { DataTypes } from 'sequelize';
-import {
-  cifrar,
-  decifrar,
-  hashDeterministico,
-} from '../utils/cripto.js';
+import { ROLES } from '../constants/roles.js';
 
 export const Usuario = sequelize.define(
   'Usuario',
@@ -40,10 +36,11 @@ export const Usuario = sequelize.define(
     },
 
     // RBAC: controle de acesso baseado em papéis.
+    // O cadastro público sempre cria cliente; funcionário e admin são criados pelo admin.
     role: {
-      type: DataTypes.ENUM('admin', 'usuario'),
+      type: DataTypes.ENUM(...ROLES),
       allowNull: false,
-      defaultValue: 'usuario',
+      defaultValue: 'cliente',
     },
 
     ativo: {
@@ -52,62 +49,9 @@ export const Usuario = sequelize.define(
       defaultValue: true,
     },
 
-    // CPF armazenado cifrado e com hash determinístico.
-    cpfCriptografado: {
-      type: DataTypes.TEXT,
-      allowNull: true,
-    },
-
-    cpfHash: {
-      type: DataTypes.STRING(64),
-      allowNull: true,
-      unique: true,
-    },
-
-    // Atributo virtual para leitura e escrita do CPF.
-    cpf: {
-      type: DataTypes.VIRTUAL,
-
-      get() {
-        const cifrado = this.getDataValue('cpfCriptografado');
-
-        return cifrado ? decifrar(cifrado) : null;
-      },
-
-      set(valor) {
-        if (valor == null) {
-          this.setDataValue('cpfCriptografado', null);
-          this.setDataValue('cpfHash', null);
-
-          return;
-        }
-
-        this.setDataValue('cpfCriptografado', cifrar(valor));
-        this.setDataValue('cpfHash', hashDeterministico(valor));
-      },
-    },
-
-    // Telefone celular: DDD + 9 dígitos.
+    // Telefone celular: DDD + 9 dígitos. Contato do cliente para as reservas.
     telefoneCelular: {
       type: DataTypes.STRING(11),
-      allowNull: true,
-    },
-
-    // Telefone fixo: DDD + 8 dígitos.
-    telefoneFixo: {
-      type: DataTypes.STRING(10),
-      allowNull: true,
-    },
-
-    // Data no formato AAAA-MM-DD.
-    dataNascimento: {
-      type: DataTypes.DATEONLY,
-      allowNull: true,
-    },
-
-    // Código do país: ISO 3166-1 alpha-2.
-    paisOrigem: {
-      type: DataTypes.STRING(2),
       allowNull: true,
     },
   },
@@ -116,13 +60,5 @@ export const Usuario = sequelize.define(
     timestamps: true,
   },
 );
-
-// Busca de usuário pelo hash do CPF.
-Usuario.buscarPorCpf = (cpf) =>
-  Usuario.findOne({
-    where: {
-      cpfHash: hashDeterministico(cpf),
-    },
-  });
 
 export default Usuario;
