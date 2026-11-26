@@ -1,8 +1,11 @@
 import * as adminService from '../services/admin.service.js';
 
 export async function listarUsuarios(req, res) {
-    const { pagina, limite, busca } = req.query;
-    return res.status(200).json(await adminService.listarUsuarios({ pagina, limite, busca }));
+    return res.status(200).json(await adminService.listarUsuarios(req.validado.query));
+}
+
+export async function criarUsuario(req, res) {
+    return res.status(201).json(await adminService.criarUsuario(req.body));
 }
 
 export async function desativarUsuario(req, res) {

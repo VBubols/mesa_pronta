@@ -45,11 +45,34 @@ const definition = {
   tags: [
     { name: 'Autenticação', description: 'Cadastro e login' },
     { name: 'Usuário', description: 'Perfil, senha e conta do usuário logado' },
-    { name: 'Admin', description: 'Administração de usuários (somente perfil `admin`)' },
+    { name: 'Admin', description: 'Administração de usuários: cria funcionários, lista, desativa e reativa (somente `admin`)' },
   ],
   components: {
     securitySchemes: {
       bearerAuth: { type: 'http', scheme: 'bearer', bearerFormat: 'JWT' },
+    },
+    // Respostas repetidas em quase todas as rotas: use { $ref: '#/components/responses/...' }
+    responses: {
+      DadosInvalidos: {
+        description: 'Dados inválidos',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/ErroDados' } } },
+      },
+      NaoAutenticado: {
+        description: 'Token ausente, inválido ou expirado (inclui conta desativada)',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Erro' } } },
+      },
+      SemPermissao: {
+        description: 'O perfil do usuário não tem acesso a esta rota',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Erro' } } },
+      },
+      NaoEncontrado: {
+        description: 'Registro não encontrado',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Erro' } } },
+      },
+      Conflito: {
+        description: 'A operação conflita com o estado atual (a mensagem explica)',
+        content: { 'application/json': { schema: { $ref: '#/components/schemas/Erro' } } },
+      },
     },
     schemas: {
       Erro: {

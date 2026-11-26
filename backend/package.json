@@ -8,6 +8,7 @@
     "dev": "nodemon src/app.js",
     "start": "node src/app.js",
     "seed": "node src/seeds/admin.seed.js",
+    "db:reset": "node src/seeds/reset.js",
     "test": "node --test"
   },
   "keywords": [],
