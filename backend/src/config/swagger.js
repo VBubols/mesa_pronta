@@ -11,6 +11,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import swaggerJsdoc from 'swagger-jsdoc';
 import { ROLES } from '../constants/roles.js';
+import { CATEGORIAS_PRODUTO } from '../constants/restaurante.js';
 
 const raiz = path.dirname(fileURLToPath(import.meta.url));
 
@@ -46,6 +47,8 @@ const definition = {
     { name: 'Autenticação', description: 'Cadastro e login' },
     { name: 'Usuário', description: 'Perfil, senha e conta do usuário logado' },
     { name: 'Admin', description: 'Administração de usuários: cria funcionários, lista, desativa e reativa (somente `admin`)' },
+    { name: 'Cardápio', description: 'Cardápio público e gestão dos produtos' },
+    { name: 'Mesas', description: 'Mesas do salão' },
   ],
   components: {
     securitySchemes: {
@@ -115,6 +118,30 @@ const definition = {
       Usuario: {
         type: 'object',
         properties: propriedadesUsuario,
+      },
+      Produto: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          nome: { type: 'string', example: 'Risoto de cogumelos' },
+          descricao: nulo(texto({ example: 'Arroz arbóreo, mix de cogumelos e parmesão' })),
+          categoria: { type: 'string', enum: CATEGORIAS_PRODUTO },
+          precoCentavos: { type: 'integer', example: 5890, description: 'Em centavos: 5890 = R$ 58,90' },
+          disponivel: { type: 'boolean' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Mesa: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          numero: { type: 'integer', example: 7 },
+          capacidade: { type: 'integer', example: 4 },
+          ativa: { type: 'boolean' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
       },
       ListaDeUsuarios: {
         type: 'object',
