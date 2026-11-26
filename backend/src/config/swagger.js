@@ -53,6 +53,7 @@ const definition = {
     { name: 'Mesas', description: 'Mesas do salão' },
     { name: 'Reservas', description: 'Reservas de mesa (sexta a domingo), compra antecipada, check-in e conclusão' },
     { name: 'Pedidos', description: 'Pedidos na mesa: lançamento, preparo, cancelamento e pagamento' },
+    { name: 'Financeiro', description: 'Compras de alimentos e resumo financeiro com o repasse dos garçons (somente `admin`)' },
   ],
   components: {
     securitySchemes: {
@@ -235,6 +236,72 @@ const definition = {
           cliente: nulo({ allOf: [{ $ref: '#/components/schemas/PessoaResumo' }] }),
           createdAt: { type: 'string', format: 'date-time' },
           updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      Compra: {
+        type: 'object',
+        properties: {
+          id: { type: 'string', format: 'uuid' },
+          descricao: { type: 'string', example: 'Hortifruti da semana' },
+          fornecedor: nulo(texto({ example: 'Ceasa SC' })),
+          valorCentavos: { type: 'integer', example: 48000 },
+          data: { type: 'string', format: 'date' },
+          registradoPorId: { type: 'string', format: 'uuid' },
+          registradoPor: { $ref: '#/components/schemas/PessoaResumo' },
+          createdAt: { type: 'string', format: 'date-time' },
+          updatedAt: { type: 'string', format: 'date-time' },
+        },
+      },
+      ResumoFinanceiro: {
+        type: 'object',
+        properties: {
+          periodo: {
+            type: 'object',
+            properties: { inicio: { type: 'string', format: 'date' }, fim: { type: 'string', format: 'date' } },
+          },
+          receitaCentavos: { type: 'integer', description: 'Subtotal dos pedidos pagos (sem os 10%)' },
+          despesasCentavos: { type: 'integer', description: 'Soma das compras' },
+          saldoCentavos: { type: 'integer', description: 'Receita menos despesas' },
+          taxaServicoCentavos: { type: 'integer', description: 'Total dos 10%, a repassar aos garçons' },
+          totalRecebidoCentavos: { type: 'integer', description: 'Receita mais taxa de serviço' },
+          pedidosPagos: { type: 'integer' },
+          ticketMedioCentavos: { type: 'integer' },
+          compras: { type: 'integer' },
+          porGarcom: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                garcomId: nulo({ type: 'string', format: 'uuid', description: 'null: compra antecipada antes do check-in' }),
+                nome: { type: 'string', example: 'Carlos Pereira' },
+                pedidos: { type: 'integer' },
+                taxaServicoCentavos: { type: 'integer' },
+              },
+            },
+          },
+          porFormaPagamento: {
+            type: 'array',
+            items: {
+              type: 'object',
+              properties: {
+                formaPagamento: { type: 'string', enum: FORMAS_PAGAMENTO },
+                pedidos: { type: 'integer' },
+                totalCentavos: { type: 'integer' },
+              },
+            },
+          },
+          maisVendidos: {
+            type: 'array',
+            description: 'Os 5 produtos com mais receita no período',
+            items: {
+              type: 'object',
+              properties: {
+                nomeProduto: { type: 'string' },
+                quantidade: { type: 'integer' },
+                receitaCentavos: { type: 'integer' },
+              },
+            },
+          },
         },
       },
       ListaDeUsuarios: {

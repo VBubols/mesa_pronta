@@ -5,6 +5,7 @@ import Mesa from './mesa.model.js';
 import Produto from './produto.model.js';
 import Reserva from './reserva.model.js';
 import { Pedido, ItemPedido } from './pedido.model.js';
+import Compra from './compra.model.js';
 
 // Mesas, produtos e usuários nunca são apagados (são desativados), então as
 // chaves estrangeiras usam RESTRICT: o banco impede apagar algo que tem histórico.
@@ -27,4 +28,7 @@ Pedido.hasMany(ItemPedido, { foreignKey: { name: 'pedidoId', allowNull: false },
 ItemPedido.belongsTo(Pedido, { foreignKey: 'pedidoId' });
 ItemPedido.belongsTo(Produto, { foreignKey: { name: 'produtoId', allowNull: false }, as: 'produto', ...restrito });
 
-export { Usuario, Mesa, Produto, Reserva, Pedido, ItemPedido };
+// Compra
+Compra.belongsTo(Usuario, { foreignKey: { name: 'registradoPorId', allowNull: false }, as: 'registradoPor', ...restrito });
+
+export { Usuario, Mesa, Produto, Reserva, Pedido, ItemPedido, Compra };
